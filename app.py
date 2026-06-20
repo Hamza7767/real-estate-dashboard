@@ -64,6 +64,7 @@ def properties_api():
         }
         
     return jsonify(data)
+app = app
 
 if __name__ == '__main__':
     app.run(debug=True, port=8500)
