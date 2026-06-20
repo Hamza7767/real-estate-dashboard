@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Real Estate Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-900 text-white font-sans min-h-screen flex flex-col justify-between">
+
+    <div class="container mx-auto p-6 max-w-4xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-extrabold text-blue-400 tracking-tight">Real Estate Search Scraper</h1>
+            <p class="text-slate-400 mt-2">Search any city to view live graphical property trends</p>
+        </header>
+
+        <div class="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700 mb-6 flex gap-3">
+            <input type="text" id="citySearchInput" value="Islamabad" placeholder="Enter city name (e.g. Lahore, Karachi, Rawalpindi)..." 
+                   class="w-full bg-slate-900 border border-slate-600 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 transition">
+            <button onclick="fetchCityData()" class="bg-blue-600 hover:bg-blue-500 text-white font-semibold px-6 py-2.5 rounded-xl transition duration-200 shadow-md whitespace-nowrap">
+                🔍 Search & Scrape
+            </button>
+        </div>
+
+        <div class="bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-700">
+            <h2 id="chartTitle" class="text-lg font-semibold text-slate-200 mb-6 text-center">Property Rates in Islamabad (Millions PKR)</h2>
+            
+            <div class="relative h-[380px] w-full p-2 rounded-xl">
+                <canvas id="realEstateChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center p-4 text-sm text-slate-500">
+        Conzummate Internship Task • Built by Subhan
+    </footer>
+
+    <script>
+        let myChart = null;
+
+        async function fetchCityData() {
+            const cityInput = document.getElementById('citySearchInput').value.trim();
+            if (!cityInput) return alert("Please enter a city name!");
+
+            try {
+                // Input city ko URL parameter ke tour par backend par bhejna
+                const response = await fetch(`/api/properties?city=${encodeURIComponent(cityInput)}`);
+                const propertyData = await response.json();
+
+                // Graph Title update karna
+                document.getElementById('chartTitle').innerText = `Property Rates in ${cityInput.charAt(0).toUpperCase() + cityInput.slice(1)} (Millions PKR)`;
+
+                const areas = Object.keys(propertyData);
+                const prices = Object.values(propertyData);
+                const ctx = document.getElementById('realEstateChart').getContext('2d');
+
+                if (myChart) {
+                    myChart.destroy();
+                }
+
+                myChart = new Chart(ctx, {
+                    type: 'bar', 
+                    data: {
+                        labels: areas,
+                        datasets: [{
+                            label: 'Avg Price (Millions PKR)',
+                            data: prices,
+                            backgroundColor: 'rgba(59, 130, 246, 0.75)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            hoverBackgroundColor: 'rgba(16, 185, 129, 0.9)' // Change color to emerald green on hover
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                                ticks: { color: '#cbd5e1' }
+                            },
+                            x: {
+                                grid: { display: false },
+                                ticks: { color: '#cbd5e1' }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Error updating search graph:", error);
+            }
+        }
+
+        // Auto load initial chart
+        window.onload = fetchCityData;
+    </script>
+</body>
+</html>
